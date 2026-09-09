@@ -1,18 +1,30 @@
 #!/bin/bash
 
-# Port Binding for Render Free Tier
+# Port Binding for Render
 python3 -m http.server 8080 &
 
 FILE_ID="18mJxKbzcZS2_H-7suWOFYTeW-Pk55nb-"
 
 echo "=== STARTING VIDEO DOWNLOAD ==="
-gdown --fuzzy "https://drive.google.com/uc?id=$FILE_ID" -O /app/video.mp4
 
+# Try gdown
+gdown "https://drive.google.com/uc?id=${FILE_ID}&confirm=t" -O /app/video.mp4 --fuzzy
+
+# Fallback download using curl if gdown fails
 if [ ! -f /app/video.mp4 ] || [ ! -s /app/video.mp4 ]; then
-    gdown --id "$FILE_ID" -O /app/video.mp4 --remaining-ok
+    echo "gdown failed, trying curl..."
+    curl -L -c /tmp/cookies.txt "https://docs.google.com/uc?export=download&id=${FILE_ID}" > /tmp/confirm.html
+    CONFIRM=$(grep -o 'confirm=[^&]*' /tmp/confirm.html | head -n 1)
+    curl -L -b /tmp/cookies.txt "https://docs.google.com/uc?export=download&id=${FILE_ID}&${CONFIRM}" -o /app/video.mp4
 fi
 
-echo "=== STARTING 24/7 TWITCH STREAM ==="
+# Verify Download
+if [ ! -f /app/video.mp4 ] || [ ! -s /app/video.mp4 ]; then
+    echo "❌ ERROR: Video file download failed! Check Google Drive Link permissions."
+    exit 1
+fi
+
+echo "✅ Download Success! Starting 24/7 Twitch Stream..."
 
 while true
 do
