@@ -2,6 +2,7 @@
 
 # Port Binding for Render
 python3 -m http.server 8080 &
+python3 /app/bot.py &
 
 FILE_ID="18mJxKbzcZS2_H-7suWOFYTeW-Pk55nb-"
 
