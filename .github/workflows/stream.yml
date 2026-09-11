@@ -1,0 +1,19 @@
+name: Continuous Twitch Live Stream
+
+on:
+  schedule:
+    - cron: '0 */5 * * *' # Auto restart every 5 hours
+  workflow_dispatch:      # Manual start option
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install FFmpeg
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      - name: Start Streaming
+        run: |
+          ffmpeg -re -i "https://newcdn.tamils.click/live1channel/tracks-v1a1/mono.ts.m3u8" \
+          -c:v copy -c:a aac -ar 44100 -ab 128k -f flv \
+          "rtmps://ingest.global-contribute.live-video.net/app/${{ secrets.TWITCH_STREAM_KEY }}"
