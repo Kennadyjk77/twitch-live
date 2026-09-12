@@ -1,10 +1,7 @@
-FROM ubuntu:22.04
-
-RUN apt-get update && apt-get install -y ffmpeg curl python3 python3-pip && pip3 install gdown
-
+FROM python:3.9-slim
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
-
-COPY run.sh /app/run.sh
-RUN chmod +x /app/run.sh
-
-CMD ["/app/run.sh"]
+COPY . /app
+RUN chmod +x run.sh
+EXPOSE 8080
+CMD ["bash", "run.sh"]
