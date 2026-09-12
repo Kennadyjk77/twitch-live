@@ -1,38 +1,22 @@
 #!/bin/bash
 
-# Port Binding for Render
+# Port Binding for Render Web Service
 python3 -m http.server 8080 &
 python3 /app/bot.py &
 
-FILE_ID="1pBgZ4xvf_OtkX-03fOF8N4WFOVaGD7ki"
+# Unga M3U8 Live Stream Link
+STREAM_URL="https://newcdn.tamils.click/live1channel/tracks-v1a1/mono.ts.m3u8"
 
-echo "=== STARTING VIDEO DOWNLOAD ==="
-
-# Try gdown
-gdown "https://drive.google.com/uc?id=${FILE_ID}&confirm=t" -O /app/video.mp4 --fuzzy
-
-# Fallback download using curl if gdown fails
-if [ ! -f /app/video.mp4 ] || [ ! -s /app/video.mp4 ]; then
-    echo "gdown failed, trying curl..."
-    curl -L -c /tmp/cookies.txt "https://docs.google.com/uc?export=download&id=${FILE_ID}" > /tmp/confirm.html
-    CONFIRM=$(grep -o 'confirm=[^&]*' /tmp/confirm.html | head -n 1)
-    curl -L -b /tmp/cookies.txt "https://docs.google.com/uc?export=download&id=${FILE_ID}&${CONFIRM}" -o /app/video.mp4
-fi
-
-# Verify Download
-if [ ! -f /app/video.mp4 ] || [ ! -s /app/video.mp4 ]; then
-    echo "❌ ERROR: Video file download failed! Check Google Drive Link permissions."
-    exit 1
-fi
-
-echo "✅ Download Success! Starting 24/7 Twitch Stream..."
+echo "=== STARTING AUTOMATIC M3U8 RESTREAM TO TWITCH ==="
 
 while true
 do
-  ffmpeg -re -stream_loop -1 -i /app/video.mp4 \
+  ffmpeg -reconnect 1 -reconnect_at_eof 1 -reconnect_streamed 1 -reconnect_delay_max 5 \
+    -i "$STREAM_URL" \
     -c:v libx264 -preset ultrafast -b:v 2000k -maxrate 2000k -bufsize 4000k \
     -pix_fmt yuv420p -g 60 -c:a aac -b:a 128k -ar 44100 \
     -f flv "rtmp://live.twitch.tv/app/$TWITCH_KEY"
   
+  echo "Stream disconnect aanaal 5 seconds-il automatic-a reconnect aagum..."
   sleep 5
 done
